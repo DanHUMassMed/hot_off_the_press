@@ -60,7 +60,7 @@ class PublishHistory:
         # Check if the URL is in the CSV
         return any(row['url'] == url for row in self.data)
 
-def post_to_slack1(new_title, new_url, slack_webhook):
+def post_to_slack(new_title, new_url, slack_webhook):
     slack_webhook_url=f"https://hooks.slack.com/services/{slack_webhook}"
     message = f"*{new_title}*\n{new_url}"
     slack_data = {
@@ -80,17 +80,19 @@ def post_to_slack1(new_title, new_url, slack_webhook):
     if response.status_code != 200:
         raise Exception(f"Slack API request failed with status code {response.status_code}")
 
-
-def post_to_slack(new_title, new_url, slack_webhook):
+def post_to_slack_test(new_title, new_url, slack_webhook):
+    slack_webhook_url=f"https://hooks.slack.com/services/{slack_webhook}"
     message = f"*{new_title}*\n{new_url}"
-    print(message)
-    
+    print(f"message {message}")
+
+
     
 if __name__ == "__main__":
-    load_dotenv()
+    env_dir = os.path.dirname(os.path.abspath(__file__))
+    load_dotenv(f"{env_dir}/.env")
     publish_istory_db = PublishHistory()
     slack_webhook = os.getenv('slack_webhook')
-
+    
     new_biorxiv_entries = biorxiv_search(days=2)
     for entry in new_biorxiv_entries:
         new_title = entry.get('title','')
