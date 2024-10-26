@@ -89,19 +89,24 @@ def post_to_slack_test(new_title, new_url, slack_webhook):
     
 if __name__ == "__main__":
     env_dir = os.path.dirname(os.path.abspath(__file__))
+    todays_dt = datetime.today().strftime('%Y-%m-%d')
     load_dotenv(f"{env_dir}/.env")
     publish_istory_db = PublishHistory()
     slack_webhook = os.getenv('slack_webhook')
     
+    posted = 0
     new_biorxiv_entries = biorxiv_search(days=2)
     for entry in new_biorxiv_entries:
         new_title = entry.get('title','')
         new_url   = entry.get('url','')
         if new_title and new_url:
             if not publish_istory_db.has_url(new_url):
+                posted += 1
                 post_to_slack(new_title, new_url, slack_webhook)
                 publish_istory_db.add_new(new_url)
     
+    print(f"Found {len(new_biorxiv_entries)} BioRxiv papers, posted {posted} on {todays_dt}")
+
     term = "C. elegans"
     days=1 # Current day only
     today = datetime.today()
@@ -114,12 +119,15 @@ if __name__ == "__main__":
     esearch_params = {'term': search_term }
     esearch_result = ncbi_api.entreze_esearch(esearch_params)
     efetch_result = ncbi_api.entreze_efetch(esearch_result)
-    
+    posted = 0
     for entry in efetch_result['articles']:
         new_title = entry.get('title','')
         new_url   = entry.get('doi','')
         if new_title and new_url:
             new_url = f"https://doi.org/{new_url}"
             if not publish_istory_db.has_url(new_url):
+                posted +=1
                 post_to_slack(new_title, new_url, slack_webhook)
                 publish_istory_db.add_new(new_url)
+
+    print(f"Found {len(efetch_result['articles'])} Pubmed papers, posted {posted} on {todays_dt}")
